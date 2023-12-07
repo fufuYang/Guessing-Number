@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+  <head>
+    <title>猜數字遊戲</title>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <h1>猜數字遊戲</h1>
+    <p>1 到 100 之間的數字，你猜是多少？</p>
+    <input type="text" id="guessField" />
+    <input type="submit" value="猜!" id="guessSubmit" />
+    <p class="message"></p>
+    <button id="restartButton" style="display: none">再玩一次吧!</button>
+  </body>
+  <script>
+    // Random number
+    let targetNumber = generateRandomNumber();
+    console.log("answer: " + targetNumber);
+
+    // Get element
+    const guessField = document.getElementById("guessField");
+    const guessSubmit = document.getElementById("guessSubmit");
+    const message = document.querySelector(".message");
+    const restartButton = document.getElementById("restartButton"); //重玩的按鈕
+    let count = 0; // 玩家猜了幾次
+    let lowerNumber = 1; // 玩家猜測下限
+    let upperNumber = 100; // 玩家猜測上限
+
+    // Event listener
+    guessSubmit.addEventListener("click", checkGuess);
+    restartButton.addEventListener("click", restartGame); //重玩的事件
+
+    // Guess function
+    function checkGuess() {
+      if (guessSubmit.disabled) {
+        // 如果按鈕已經被禁用，不執行猜測邏輯
+        return;
+      }
+      const userGuess = parseInt(guessField.value);
+      // 檢查是否為有效數字
+      if (isNaN(userGuess)) {
+        message.textContent =
+          "請猜 " + lowerNumber + " 到 " + upperNumber + " 之間。";
+        message.style.color = "red";
+        return;
+      }
+      console.log("userGuess: " + userGuess);
+
+      if (userGuess < lowerNumber || userGuess > upperNumber) {
+        message.textContent =
+          "請猜 " + lowerNumber + " 到 " + upperNumber + " 之間。";
+        message.style.color = "red";
+        return; // 終止函數執行
+      }
+
+      count++;
+
+      if (userGuess === targetNumber) {
+        message.textContent =
+          "恭喜你，你猜對了！謎底是 " +
+          targetNumber +
+          "。你總共猜了 " +
+          count +
+          " 次哦～";
+        message.style.color = "green";
+        guessSubmit.disabled = true;
+        restartButton.style.display = "block"; // 顯示重新開始按鈕
+      } else if (userGuess < targetNumber) {
+        lowerNumber = userGuess; // 更新玩家猜測下限
+        message.textContent =
+          "太小了，請猜 " +
+          lowerNumber +
+          " 到 " +
+          upperNumber +
+          " 之間。你這次猜了 " +
+          count +
+          " 次唷!";
+        message.style.color = "red";
+      } else {
+        upperNumber = userGuess; // 更新玩家猜測上限
+        message.textContent =
+          "太大了，請猜 " +
+          lowerNumber +
+          " 到 " +
+          upperNumber +
+          " 之間。你這次猜了 " +
+          count +
+          " 次唷!";
+        message.style.color = "red";
+      }
+      guessField.value = "";
+      guessField.focus();
+    }
+
+    // Restart function
+    function restartGame() {
+      targetNumber = generateRandomNumber();
+      console.log("answer: " + targetNumber);
+
+      count = 0;
+      lowerNumber = 1;
+      upperNumber = 100;
+      guessSubmit.disabled = false;
+      restartButton.style.display = "none"; // 隱藏重新開始按鈕
+      message.textContent = "";
+      message.style.color = "black";
+    }
+
+    // Helper function to generate a random number between 1 and 100
+    function generateRandomNumber() {
+      return Math.floor(Math.random() * 100) + 1;
+    }
+  </script>
+</html>
