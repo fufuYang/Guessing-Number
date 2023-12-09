@@ -1,114 +1,151 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant-TW">
-  <head>
+<head>
     <title>猜數字遊戲</title>
     <meta charset="utf-8" />
-  </head>
-  <body>
+</head>
+
+<body>
     <h1>猜數字遊戲</h1>
-    <p>1 到 100 之間的數字，你猜是多少？</p>
+    <p>
+        <span id="minNumber">1</span>到<span id="maxNumber">100</span>之間的數字，你猜是多少？
+    </p>
     <input type="text" id="guessField" />
     <input type="submit" value="猜!" id="guessSubmit" />
+    <input type="submit" value="答案在這裡拉!" id="targetSubmit" />
+    <p id="targetAnswer"></p>
+    <input type="submit" value="再玩一次吧!" id="restartButton" />
     <p class="message"></p>
-    <button id="restartButton" style="display: none">再玩一次吧!</button>
-  </body>
-  <script>
-    // Random number
-    let targetNumber = generateRandomNumber();
-    console.log("answer: " + targetNumber);
+    <p class="reciprocal" style="color: red;">
+        <span id="countdown" class="second" style="color: red;"></span>
+    </p> <!--倒數計時 -->
+    
+    <script>
+        let targetNumber = generateRandomNumber();
+        console.log("answer: " + targetNumber);
 
-    // Get element
-    const guessField = document.getElementById("guessField");
-    const guessSubmit = document.getElementById("guessSubmit");
-    const message = document.querySelector(".message");
-    const restartButton = document.getElementById("restartButton"); //重玩的按鈕
-    let count = 0; // 玩家猜了幾次
-    let lowerNumber = 1; // 玩家猜測下限
-    let upperNumber = 100; // 玩家猜測上限
+        const guessField = document.getElementById("guessField");
+        const guessSubmit = document.getElementById("guessSubmit");
+        const message = document.querySelector(".message");
+        const reciprocal = document.querySelector(".reciprocal");
+        const restartButton = document.getElementById("restartButton");
+        let count = 0;
+        let lowerNumber = 1;
+        let upperNumber = 100;
+        const minNumber = document.getElementById("minNumber");
+        const maxNumber = document.getElementById("maxNumber");
+        const targetAnswer = document.getElementById("targetAnswer");
+        const countdownElement = document.getElementById("countdown");
 
-    // Event listener
-    guessSubmit.addEventListener("click", checkGuess);
-    restartButton.addEventListener("click", restartGame); //重玩的事件
+        guessSubmit.addEventListener("click", checkGuess);
+        restartButton.addEventListener("click", restartGame);
+        targetSubmit.addEventListener("click", showAnswer);
 
-    // Guess function
-    function checkGuess() {
-      if (guessSubmit.disabled) {
-        // 如果按鈕已經被禁用，不執行猜測邏輯
-        return;
-      }
-      const userGuess = parseInt(guessField.value);
-      // 檢查是否為有效數字
-      if (isNaN(userGuess)) {
-        message.textContent =
-          "請猜 " + lowerNumber + " 到 " + upperNumber + " 之間。";
-        message.style.color = "red";
-        return;
-      }
-      console.log("userGuess: " + userGuess);
+        function checkGuess() {
+            if (guessSubmit.disabled) {
+                return;
+            }
+            const userGuess = parseInt(guessField.value);
+            if (isNaN(userGuess) || userGuess < lowerNumber || userGuess > upperNumber) {
+                displayMessage("請猜 " + lowerNumber + " 到 " + upperNumber + " 之間。", "red");
+                return;
+            }
 
-      if (userGuess < lowerNumber || userGuess > upperNumber) {
-        message.textContent =
-          "請猜 " + lowerNumber + " 到 " + upperNumber + " 之間。";
-        message.style.color = "red";
-        return; // 終止函數執行
-      }
+            count++;
+            if (userGuess === targetNumber) {
+                displayMessage("恭喜你，你猜對了！謎底是 " + targetNumber + "。你總共猜了 " + count + " 次哦～", "green");
+                guessSubmit.disabled = true;
+                restartButton.style.display = "block";
+            } else {
+                updateRange(userGuess, userGuess < targetNumber);
+                displayMessage("太" + (userGuess < targetNumber ? "小" : "大") + "了，請猜 " + lowerNumber + " 到 " + upperNumber + " 之間。你這次猜了 " + count + " 次唷!", "red");
+            }
 
-      count++;
+            if (count === 5) {
+                displayMessage("You Failed! 答案是 " + targetNumber + "。", "red");
+                guessSubmit.disabled = true;
+                restartButton.style.display = "block";
+                startCountdown();
+            }
 
-      if (userGuess === targetNumber) {
-        message.textContent =
-          "恭喜你，你猜對了！謎底是 " +
-          targetNumber +
-          "。你總共猜了 " +
-          count +
-          " 次哦～";
-        message.style.color = "green";
-        guessSubmit.disabled = true;
-        restartButton.style.display = "block"; // 顯示重新開始按鈕
-      } else if (userGuess < targetNumber) {
-        lowerNumber = userGuess; // 更新玩家猜測下限
-        message.textContent =
-          "太小了，請猜 " +
-          lowerNumber +
-          " 到 " +
-          upperNumber +
-          " 之間。你這次猜了 " +
-          count +
-          " 次唷!";
-        message.style.color = "red";
-      } else {
-        upperNumber = userGuess; // 更新玩家猜測上限
-        message.textContent =
-          "太大了，請猜 " +
-          lowerNumber +
-          " 到 " +
-          upperNumber +
-          " 之間。你這次猜了 " +
-          count +
-          " 次唷!";
-        message.style.color = "red";
-      }
-      guessField.value = "";
-      guessField.focus();
-    }
+            guessField.value = "";
+            guessField.focus();
+        }
 
-    // Restart function
-    function restartGame() {
-      targetNumber = generateRandomNumber();
-      console.log("answer: " + targetNumber);
+        function restartAfterCountdown() {
+            restartGame();
+        }
 
-      count = 0;
-      lowerNumber = 1;
-      upperNumber = 100;
-      guessSubmit.disabled = false;
-      restartButton.style.display = "none"; // 隱藏重新開始按鈕
-      message.textContent = "";
-      message.style.color = "black";
-    }
+        function restartGame() {
+            targetNumber = generateRandomNumber();
+            console.log("answer: " + targetNumber);
 
-    // Helper function to generate a random number between 1 and 100
-    function generateRandomNumber() {
-      return Math.floor(Math.random() * 100) + 1;
-    }
-  </script>
+            count = 0;
+            lowerNumber = 1;
+            upperNumber = 100;
+            guessSubmit.disabled = false;
+            message.textContent = "";
+            message.style.color = "black";
+            targetAnswer.textContent = "";
+            minNumber.textContent = "1";
+            maxNumber.textContent = "100";
+            guessField.disabled = false;
+            reciprocal.textContent = "";
+        }
+
+        function showAnswer() {
+            const targetAnswerElement = document.getElementById("targetAnswer");
+            targetAnswerElement.textContent = "答案是: " + targetNumber;
+            guessSubmit.disabled = true;
+            guessField.value = "";
+            guessField.disabled = true;
+        }
+
+        function generateRandomNumber() {
+            return Math.floor(Math.random() * 100) + 1;
+        }
+
+        function display(result, color) {
+            countdownElement.textContent = result;
+            reciprocal.textContent = "將於 " + countdownElement.textContent + " 秒後幫您重新開啟一局";
+            console.log(result);
+            if (color) {
+                reciprocal.style.color = color;
+            }
+        }
+
+        function displayMessage(text, color) {
+            message.textContent = text;
+            message.style.color = color;
+        }
+
+        function updateRange(userGuess, isSmaller) {
+            if (isSmaller) {
+                minNumber.textContent = userGuess;
+                lowerNumber = userGuess;
+            } else {
+                maxNumber.textContent = userGuess;
+                upperNumber = userGuess;
+            }
+        }
+
+        function delayedDisplay(string, ms, callback) {
+            setTimeout(function () {
+                callback(string);
+            }, ms);
+        }
+
+        function startCountdown() {
+            delayedDisplay("5", 0, display);
+            delayedDisplay("4", 1000, display);
+            delayedDisplay("3", 2000, display);
+            delayedDisplay("2", 3000, display);
+            delayedDisplay("1", 4000, display);
+            delayedDisplay("0", 5000, function () {
+                display("0");
+                restartAfterCountdown();
+            });
+        }
+    </script>
+</body>
 </html>
